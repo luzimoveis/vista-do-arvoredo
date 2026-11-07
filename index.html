@@ -493,6 +493,10 @@ const goForm = () => { box.scrollIntoView({behavior:'smooth', block:'center'}); 
 /* origem do lead (UTMs) */
 const q = new URLSearchParams(location.search);
 form.origem.value = ['utm_source','utm_medium','utm_campaign','utm_content'].map(k => q.get(k)).filter(Boolean).join(' | ') || 'direto';
+/* tráfego pago x orgânico: utm_medium de anúncio ou códigos do Google Ads / Meta Ads no link */
+const PAGO = /cpc|ppc|paid|ads|cpm|cpv|display/i.test(q.get('utm_medium') || '') ||
+             ['gclid','gbraid','wbraid','campaign_id','adset_id','ad_id'].some(k => q.has(k));
+const CANAL = PAGO ? 'Tráfego pago' : 'Orgânico';
 form.pagina.value = location.href.split('?')[0];
 
 /* máscara de telefone */
@@ -519,10 +523,11 @@ form.addEventListener('submit', async e => {
     telefone_numeros: '55' + tel.value.replace(/\D/g,''),
     empreendimento: 'Vista do Arvoredo',
     data_hora: new Date().toLocaleString('pt-BR'),
-    tags: LEAD_TAGS,
+    canal: CANAL,
+    tags: `${LEAD_TAGS}, ${CANAL}`,
     titulo: `${nome} · Vista do Arvoredo`,
     descricao: [`Nome: ${nome}`, `E-mail: ${lead.email}`, `WhatsApp: ${lead.telefone}`, `Tipologia: ${lead.planta}`,
-                `Empreendimento: Vista do Arvoredo`, `Origem: ${lead.origem}`, `Data: ${new Date().toLocaleString('pt-BR')}`].join('\n')
+                `Empreendimento: Vista do Arvoredo`, `Canal: ${CANAL}`, `Origem: ${lead.origem}`, `Data: ${new Date().toLocaleString('pt-BR')}`].join('\n')
   });
   try {
     if (WEBHOOK_NOCRM) {
